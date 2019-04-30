@@ -1,6 +1,8 @@
 import cv2
 import numpy as np
 import math
+import matplotlib.pyplot as plt
+
 
 # MOTO
 # window_size = 5
@@ -57,68 +59,67 @@ stereo = cv2.StereoSGBM_create(
 # )
 
 
-def find_corresponding_pts(im0, im1, window_size, max_offset):
-    h = int(im0.shape[0] - 2 * np.floor(window_size/2))
-    w = int(im0.shape[1] - 2 * np.floor(window_size/2))
-
-    base = int(np.floor(window_size/2))
-    print(h,w,base)
-    for i in range(1000, h - base):
-        print(i)
-        for j in range(base, w - base):
-            # window0_R = np.zeros((window_size, window_size))
-            # window0_G = np.zeros((window_size, window_size))
-            # window0_B = np.zeros((window_size, window_size))
-
-            window0_R = im0[i-base:i+base, j-base:j+base, 2]
-            window0_G = im0[i-base:i+base, j-base:j+base, 1]
-            window0_B = im0[i-base:i+base, j-base:j+base, 0]
-
-            best_point = [0, 0]
-            best_dist = 999999      # tem um jeito mais elegante de fazer isso com ctz
-
-            for k in range(j, min(j + max_offset, w - base)):
-                window1_R = im1[i-base:i+base, k-base:k+base, 2]
-                window1_G = im1[i-base:i+base, k-base:k+base, 1]
-                window1_B = im1[i-base:i+base, k-base:k+base, 0]
-
-                dif_R = np.absolute(np.subtract(window0_R, window1_R))
-                dif_G = np.absolute(np.subtract(window0_G, window1_G))
-                dif_B = np.absolute(np.subtract(window0_B, window1_B))
-
-                dif = np.sum(dif_R) + np.sum(dif_G) + np.sum(dif_B)
-                if dif < best_dist:
-                    best_dist = dif
-                    best_point = [i, k]
-            print(best_dist)
-            # if i != best_point[0] or j != best_point[1]:
-            #     print("Ponto: ", i, j, " corresponde a ", best_point)
-
-
-
-
-
 def main():
-    # window_size = input("Digite o tamanho da janela: ")
-    window_size = 5
     im0 = cv2.imread('../data/jadeplant/im0.png', cv2.CV_8UC1)
     im1 = cv2.imread('../data/jadeplant/im1.png', cv2.CV_8UC1)
 
     disparity = stereo.compute(im0, im1).astype(np.float32)/16.0
-    # print(np.unique(disparity.astype(int)))
-    disparity = (disparity-min_disp)/num_disp
-    # disparity = disparity + 16
+    # Isso é o que o req1 quer
+    # cada posição de disparity é a distância entre os pixels das 2 imagens
+    # os valores -1 eu suponho que sejam os que não tem correspondência
     
-    # disparity = np.floor(disparity * 255 / 256).astype(np.uint8)
-    # print(np.unique(disparity))
-    
+    # cv2.namedWindow('disparity', cv2.WINDOW_NORMAL)
+    # cv2.imshow('disparity', disparity)
+    # cv2.resizeWindow('disparity', 1000,1000)
 
-    # find_corresponding_pts(im1, im0, window_size, 500) # imagem mais a esquerda primeiro
-    cv2.namedWindow('disparity', cv2.WINDOW_NORMAL)
-    cv2.imshow('disparity', disparity)
-    cv2.resizeWindow('disparity', 1000,1000)
+    # cv2.waitKey()
 
-    cv2.waitKey()
+    im = plt.imshow(disparity, cmap='hot')
+    plt.colorbar(im, orientation='horizontal')
+    plt.show()
+
+    calib_params = open('../data/jadeplant/calib.txt', 'r')
+    texto = calib_params.read()
+    start_pos_baseline = texto.find('baseline')
+    end_pos_baseline = texto.find('width')
+    baseline = float(texto[start_pos_baseline+9:end_pos_baseline-1])
+    print(baseline)
+
+    start_pos_doffs = texto.find('doffs')
+    end_pos_doffs = start_pos_baseline
+    doffs = float(texto[start_pos_doffs+6:end_pos_doffs-1])
+    print(doffs)
+
+    start_pos_calib = texto.find('cam0')
+    end_pos_calib = texto.find('cam1')
+    matrix = texto[start_pos_calib+5:end_pos_calib-1]
+
+    matrix2 = matrix.replace('[','')
+    matrix2 = matrix2.replace(']','')
+    matrix2 = matrix2.replace(';',' ')
+    mat = np.fromstring(matrix2, dtype=float, sep=' ')
+    focus = mat[0]
+    print(focus)
+
+    disp2depth_factor = baseline * focus
+
+    depth = np.zeros(disparity.shape, dtype=np.uint8)
+
+    furthest = disp2depth_factor/(min(disparity[disparity>0]) + doffs)
+
+    for i in range(len(disparity)):
+        for j in range(len(disparity[i])):
+            if disparity[i, j] < 0:
+                depth[i, j] = 255
+            elif disparity[i, j] == 0:
+                depth[i, j] = 255
+            else:
+                depth[i, j] = np.floor((disp2depth_factor/(disparity[i, j] + doffs))*255/furthest)
+
+    im = plt.imshow(depth, cmap='hot')
+    plt.colorbar(im, orientation='horizontal')
+    plt.show()
+
 
 
 if __name__  == "__main__":
