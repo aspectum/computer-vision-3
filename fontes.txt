@@ -4,3 +4,11 @@ https://docs.opencv.org/3.4.5/d2/d85/classcv_1_1StereoSGBM.html
 
 Disparity -> Depth = https://docs.opencv.org/3.0-beta/doc/py_tutorials/py_calib3d/py_depthmap/py_depthmap.html
                     http://vision.middlebury.edu/stereo/data/scenes2014/ (no final explica)
+
+Calculando a matriz fundamental = https://answers.opencv.org/question/118671/compute-fundamental-matrix-from-camera-calibration/
+Sift = https://answers.opencv.org/question/90742/opencv-depth-map-from-uncalibrated-stereo-system/
+
+Arrumar a matriz de intrinsicos para scale = https://dsp.stackexchange.com/questions/6055/how-does-resizing-an-image-affect-the-intrinsic-camera-matrix/6057
+
+Algoritmo do Trucco = http://www.diegm.uniud.it/fusiello/demo/rect/
+                    = Arquivo baixado (mva99.pdf)
