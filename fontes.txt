@@ -12,3 +12,7 @@ Arrumar a matriz de intrinsicos para scale = https://dsp.stackexchange.com/quest
 
 Algoritmo do Trucco = http://www.diegm.uniud.it/fusiello/demo/rect/
                     = Arquivo baixado (mva99.pdf)
+
+Desenhar linhas epipolares = https://docs.opencv.org/3.4.4/da/de9/tutorial_py_epipolar_geometry.html
+
+(não usei) matriz fundamental = https://sourishghosh.com/2016/fundamental-matrix-from-camera-matrices/
